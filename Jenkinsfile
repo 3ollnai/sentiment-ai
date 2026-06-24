@@ -11,8 +11,8 @@ pipeline {
         stage('Checkout') {
             steps {
                 checkout scm
-                echo "Branche : ${env.BRANCH_NAME}"
-                echo "Commit : ${env.GIT_COMMIT}"
+                sh 'pwd'
+                sh 'ls -la'
                 sh 'git log --oneline -5'
             }
         }
@@ -20,11 +20,12 @@ pipeline {
         stage('Lint') {
             steps {
                 sh '''
+                python3 -m pip install flake8 -q || true
                 docker run --rm \
-                -v "$WORKSPACE:/app" \
+                -v "$(pwd):/app" \
                 -w /app \
                 python:3.12-slim \
-                sh -c "pip install flake8 -q && flake8 src/ --max-line-length=100"
+                sh -c "ls -la && pip install flake8 -q && flake8 src/ --max-line-length=100"
                 '''
             }
         }
