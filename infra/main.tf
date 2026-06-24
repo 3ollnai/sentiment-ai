@@ -13,6 +13,10 @@ provider "docker" {
 
 resource "docker_network" "cicd" {
   name = "cicd-network"
+
+  lifecycle {
+    prevent_destroy = false
+  }
 }
 
 resource "docker_image" "sentiment" {
