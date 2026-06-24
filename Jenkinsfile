@@ -53,32 +53,35 @@ pipeline {
             }
         }
 
-        stage('SonarQube Analysis') {
-            environment {
-                SONARQUBE_TOKEN = credentials('sonar-token')
-            }
+stage('SonarQube Analysis') {
+    environment {
+        SONARQUBE_TOKEN = credentials('sonar-token')
+    }
 
-            steps {
-                withSonarQubeEnv('sonarqube') {
-                    sh """
-                    docker run --rm \
-                    --network cicd-network \
-                    -v "\$WORKSPACE:/usr/src" \
-                    -w /usr/src \
-                    -e SONAR_HOST_URL="\$SONAR_HOST_URL" \
-                    -e SONAR_TOKEN="\$SONARQUBE_TOKEN" \
-                    sonarsource/sonar-scanner-cli:latest \
-                    sonar-scanner \
-                    -Dsonar.projectKey=sentiment-ai \
-                    -Dsonar.projectName=SentimentAI \
-                    -Dsonar.sources=src \
-                    -Dsonar.python.version=3.11 \
-                    -Dsonar.python.coverage.reportPaths=coverage.xml \
-                    -Dsonar.sourceEncoding=UTF-8
-                    """
-                }
-            }
+    steps {
+        withSonarQubeEnv('sonarqube') {
+            sh '''
+            pwd
+            ls -la
+            ls -la src
+
+            docker run --rm \
+            --network cicd-network \
+            -v "$PWD:/usr/src" \
+            -w /usr/src \
+            -e SONAR_HOST_URL="$SONAR_HOST_URL" \
+            -e SONAR_TOKEN="$SONARQUBE_TOKEN" \
+            sonarsource/sonar-scanner-cli:latest \
+            sonar-scanner \
+            -Dsonar.projectKey=sentiment-ai \
+            -Dsonar.projectName=SentimentAI \
+            -Dsonar.sources=. \
+            -Dsonar.exclusions=tests/** \
+            -Dsonar.python.coverage.reportPaths=coverage.xml
+            '''
         }
+    }
+}
 
         stage('Quality Gate') {
             steps {
