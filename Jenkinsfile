@@ -84,10 +84,6 @@ pipeline {
         }
 
         stage('Push') {
-            when {
-                expression { true }
-            }
-
             steps {
                 withCredentials([usernamePassword(
                     credentialsId: 'github-token',
@@ -107,12 +103,13 @@ pipeline {
             }
         }
 
-stage('Deploy Staging') {
-    steps {
-        echo "Déploiement de ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} en staging"
-        echo "Staging simulé disponible sur http://localhost:8080"
+        stage('Deploy Staging') {
+            steps {
+                echo "Déploiement de ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} en staging"
+                echo "Staging simulé disponible sur http://localhost:8080"
+            }
+        }
     }
-}
 
     post {
         always {
