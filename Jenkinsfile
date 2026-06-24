@@ -65,6 +65,7 @@ pipeline {
                     pwd
                     ls -la
                     ls -la src
+                    ls -la tests
 
                     docker run --rm \
                     --network cicd-network \
@@ -76,9 +77,13 @@ pipeline {
                     sonar-scanner \
                     -Dsonar.projectKey=sentiment-ai \
                     -Dsonar.projectName=SentimentAI \
-                    -Dsonar.sources=. \
-                    -Dsonar.exclusions=tests/** \
-                    -Dsonar.python.coverage.reportPaths=coverage.xml
+                    -Dsonar.projectBaseDir=/usr/src \
+                    -Dsonar.sources=src \
+                    -Dsonar.tests=tests \
+                    -Dsonar.python.version=3.11 \
+                    -Dsonar.python.coverage.reportPaths=coverage.xml \
+                    -Dsonar.scm.provider=git \
+                    -Dsonar.sourceEncoding=UTF-8
                     '''
                 }
             }
