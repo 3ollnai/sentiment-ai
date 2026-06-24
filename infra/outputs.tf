@@ -10,5 +10,5 @@ output "app_url" {
 
 output "network_name" {
   description = "Nom du réseau Docker"
-  value       = docker_network.cicd.name
+  value       = data.docker_network.cicd.name
 }
