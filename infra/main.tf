@@ -11,12 +11,8 @@ provider "docker" {
   host = "unix:///var/run/docker.sock"
 }
 
-resource "docker_network" "cicd" {
+data "docker_network" "cicd" {
   name = "cicd-network"
-
-  lifecycle {
-    prevent_destroy = false
-  }
 }
 
 resource "docker_image" "sentiment" {
@@ -31,7 +27,7 @@ resource "docker_container" "sentiment_staging" {
   restart = "unless-stopped"
 
   networks_advanced {
-    name = docker_network.cicd.name
+    name = data.docker_network.cicd.name
   }
 
   ports {
