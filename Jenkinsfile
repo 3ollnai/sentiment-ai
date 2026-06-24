@@ -26,6 +26,16 @@ pipeline {
             }
         }
 
+        stage('IaC Validate') {
+            steps {
+                dir('infra') {
+                    sh 'terraform init -backend=false -input=false'
+                    sh 'terraform fmt -check'
+                    sh 'terraform validate'
+                }
+            }
+        }
+
         stage('Build & Test') {
             steps {
                 sh """
@@ -54,34 +64,34 @@ pipeline {
             }
         }
 
-stage('SonarQube Analysis') {
-    environment {
-        SONARQUBE_TOKEN = credentials('sonar-token')
-    }
+        stage('SonarQube Analysis') {
+            environment {
+                SONARQUBE_TOKEN = credentials('sonar-token')
+            }
 
-    steps {
-        withSonarQubeEnv('sonarqube') {
-            sh '''
-            docker run --rm \
-            --network cicd-network \
-            --volumes-from jenkins \
-            -w "$WORKSPACE" \
-            -e SONAR_HOST_URL="$SONAR_HOST_URL" \
-            -e SONAR_TOKEN="$SONARQUBE_TOKEN" \
-            sonarsource/sonar-scanner-cli:latest \
-            sonar-scanner \
-            -Dsonar.projectKey=sentiment-ai \
-            -Dsonar.projectName=SentimentAI \
-            -Dsonar.projectBaseDir="$WORKSPACE" \
-            -Dsonar.sources=src \
-            -Dsonar.python.version=3.11 \
-            -Dsonar.python.coverage.reportPaths=coverage.xml \
-            -Dsonar.sourceEncoding=UTF-8 \
-            -Dsonar.scanner.metadataFilePath="$WORKSPACE/report-task.txt"
-            '''
+            steps {
+                withSonarQubeEnv('sonarqube') {
+                    sh '''
+                    docker run --rm \
+                    --network cicd-network \
+                    --volumes-from jenkins \
+                    -w "$WORKSPACE" \
+                    -e SONAR_HOST_URL="$SONAR_HOST_URL" \
+                    -e SONAR_TOKEN="$SONARQUBE_TOKEN" \
+                    sonarsource/sonar-scanner-cli:latest \
+                    sonar-scanner \
+                    -Dsonar.projectKey=sentiment-ai \
+                    -Dsonar.projectName=SentimentAI \
+                    -Dsonar.projectBaseDir="$WORKSPACE" \
+                    -Dsonar.sources=src \
+                    -Dsonar.python.version=3.11 \
+                    -Dsonar.python.coverage.reportPaths=coverage.xml \
+                    -Dsonar.sourceEncoding=UTF-8 \
+                    -Dsonar.scanner.metadataFilePath="$WORKSPACE/report-task.txt"
+                    '''
+                }
+            }
         }
-    }
-}
 
         stage('Quality Gate') {
             steps {
@@ -124,10 +134,23 @@ stage('SonarQube Analysis') {
             }
         }
 
+        stage('IaC Apply') {
+            steps {
+                dir('infra') {
+                    sh """
+                    terraform init -input=false
+
+                    terraform apply -auto-approve \
+                    -var="image_tag=${IMAGE_TAG}"
+                    """
+                }
+            }
+        }
+
         stage('Deploy Staging') {
             steps {
-                echo "Déploiement de ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} en staging"
-                echo "Staging simulé disponible sur http://localhost:8080"
+                sh 'curl -f http://localhost:8001/health || exit 1'
+                echo "Staging OK : http://localhost:8001"
             }
         }
     }
