@@ -148,11 +148,15 @@ pipeline {
         }
 
         stage('Deploy Staging') {
-            steps {
-                sh 'curl -f http://localhost:8001/health || exit 1'
-                echo "Staging OK : http://localhost:8001"
-            }
-        }
+    steps {
+        sh '''
+        docker ps | grep sentiment-staging
+        docker logs sentiment-staging || true
+        docker exec sentiment-staging curl -f http://localhost:8000/health || exit 1
+        echo "Staging OK : http://localhost:8001"
+        '''
+    }
+}
     }
 
     post {
