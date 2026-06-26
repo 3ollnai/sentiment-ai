@@ -18,16 +18,18 @@ resource "docker_container" "prometheus" {
     external = 9090
   }
 
-  volumes {
-    host_path      = abspath("${path.module}/../monitoring/prometheus.yml")
-    container_path = "/etc/prometheus/prometheus.yml"
-    read_only      = true
+  mounts {
+    target    = "/etc/prometheus/prometheus.yml"
+    source    = abspath("${path.module}/../monitoring/prometheus.yml")
+    type      = "bind"
+    read_only = true
   }
 
-  volumes {
-    host_path      = abspath("${path.module}/../monitoring/alerts.yml")
-    container_path = "/etc/prometheus/alerts.yml"
-    read_only      = true
+  mounts {
+    target    = "/etc/prometheus/alerts.yml"
+    source    = abspath("${path.module}/../monitoring/alerts.yml")
+    type      = "bind"
+    read_only = true
   }
 
   command = [
