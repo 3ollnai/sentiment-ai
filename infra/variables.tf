@@ -1,11 +1,11 @@
 variable "image_tag" {
-  description = "Tag de l'image Docker à déployer"
+  description = "Tag de l'image Docker a deployer"
   type        = string
   default     = "latest"
 }
 
 variable "app_port" {
-  description = "Port exposé en staging"
+  description = "Port expose en staging"
   type        = number
   default     = 8001
 }
@@ -17,13 +17,7 @@ variable "container_name" {
 }
 
 variable "registry" {
-  description = "Registry Docker"
+  description = "Registry Docker (ex: ghcr.io/monpseudo)"
   type        = string
-  default     = "ghcr.io/3ollnai"
-}
-
-variable "docker_host" {
-  description = "Docker host selon l'environnement"
-  type        = string
-  default     = "npipe:////./pipe/docker_engine"
+  default     = "ghcr.io/el-bak"
 }

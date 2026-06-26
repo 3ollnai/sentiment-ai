@@ -7,27 +7,30 @@ terraform {
   }
 }
 
+# Windows avec Docker Desktop
 provider "docker" {
-  host = var.docker_host
+  host = "unix:///var/run/docker.sock"
 }
 
-data "docker_network" "cicd" {
+# Réseau Docker partagé Jenkins/SonarQube/SentimentAI
+resource "docker_network" "cicd" {
   name = "cicd-network"
 }
 
+# Image Docker SentimentAI locale buildée par Jenkins
 resource "docker_image" "sentiment" {
   name         = "sentiment-ai:${var.image_tag}"
   keep_locally = true
 }
 
+# Conteneur staging
 resource "docker_container" "sentiment_staging" {
-  name  = var.container_name
-  image = docker_image.sentiment.image_id
-
+  name    = var.container_name
+  image   = docker_image.sentiment.image_id
   restart = "unless-stopped"
 
   networks_advanced {
-    name = data.docker_network.cicd.name
+    name = docker_network.cicd.name
   }
 
   ports {
@@ -37,6 +40,13 @@ resource "docker_container" "sentiment_staging" {
 
   env = [
     "ENV=staging",
-    "LOG_LEVEL=INFO"
+    "LOG_LEVEL=INFO",
   ]
+
+  healthcheck {
+    test     = ["CMD", "curl", "-f", "http://localhost:8000/health"]
+    interval = "30s"
+    timeout  = "10s"
+    retries  = 3
+  }
 }
