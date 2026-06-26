@@ -50,3 +50,4 @@ def predict(request: PredictionRequest):
     except Exception:
         predictions_total.labels(label="UNKNOWN", status="error").inc()
         raise
+    
