@@ -1,10 +1,12 @@
-from pydantic import BaseModel, constr
+from pydantic import BaseModel, Field
 
 
 class PredictionRequest(BaseModel):
-    text: constr(strip_whitespace=True, min_length=1)
+    text: str = Field(..., min_length=1)
 
 
 class PredictionResponse(BaseModel):
     label: str
     score: float
+
+    
