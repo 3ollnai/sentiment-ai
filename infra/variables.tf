@@ -21,3 +21,9 @@ variable "registry" {
   type        = string
   default     = "ghcr.io/el-bak"
 }
+
+variable "docker_host" {
+  description = "Docker host"
+  type        = string
+  default     = "unix:///var/run/docker.sock"
+}

@@ -1,15 +1,13 @@
 terraform {
   required_providers {
     docker = {
-      source  = "kreuzwerker/docker"
-      version = "~> 3.0"
+      source = "kreuzwerker/docker"
     }
   }
 }
 
-# Windows avec Docker Desktop
 provider "docker" {
-  host = "unix:///var/run/docker.sock"
+  host = var.docker_host
 }
 
 # Réseau Docker partagé Jenkins/SonarQube/SentimentAI
