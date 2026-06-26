@@ -137,14 +137,21 @@ pipeline {
 stage('IaC Apply') {
     steps {
         dir('infra') {
-            sh '''
-            docker rm -f sentiment-staging prometheus grafana 2>/dev/null || true
+            sh """
+            docker rm -f sentiment-staging 2>/dev/null || true
 
             terraform init -input=false
 
             terraform apply -auto-approve \
             -var="docker_host=unix:///var/run/docker.sock" \
             -var="image_tag=${IMAGE_TAG}"
+            """
+        }
+
+        dir('monitoring') {
+            sh '''
+            docker compose down 2>/dev/null || true
+            docker compose up -d
             '''
         }
     }
