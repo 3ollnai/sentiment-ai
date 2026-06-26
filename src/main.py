@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from prometheus_fastapi_instrumentator import Instrumentator
 from prometheus_client import Counter, Gauge, Histogram
 from src.schemas import PredictionRequest, PredictionResponse
@@ -36,6 +36,9 @@ def health():
 
 @app.post("/predict", response_model=PredictionResponse)
 def predict(request: PredictionRequest):
+    if not request.text.strip():
+        raise HTTPException(status_code=422, detail="Le texte ne peut pas être vide")
+
     start = time.time()
     try:
         result = model.predict(request.text)
