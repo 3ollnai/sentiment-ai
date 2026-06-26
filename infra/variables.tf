@@ -21,3 +21,9 @@ variable "registry" {
   type        = string
   default     = "ghcr.io/3ollnai"
 }
+
+variable "docker_host" {
+  description = "Docker host selon l'environnement"
+  type        = string
+  default     = "npipe:////./pipe/docker_engine"
+}

@@ -141,27 +141,80 @@ pipeline {
                     terraform init -input=false
 
                     terraform apply -auto-approve \
+                    -var="docker_host=unix:///var/run/docker.sock" \
                     -var="image_tag=${IMAGE_TAG}"
                     """
                 }
             }
         }
 
-stage('Deploy Staging') {
-    steps {
-        sh '''
-        docker ps | grep sentiment-staging
-        docker logs sentiment-staging || true
+        stage('Deploy Staging') {
+            steps {
+                sh '''
+                docker ps | grep sentiment-staging
+                docker logs sentiment-staging || true
 
-        docker run --rm \
-        --network cicd-network \
-        curlimages/curl:latest \
-        curl -f http://sentiment-staging:8000/health
+                docker run --rm \
+                --network cicd-network \
+                curlimages/curl:latest \
+                curl -f http://sentiment-staging:8000/health
 
-        echo "Staging OK : http://localhost:8001"
-        '''
-    }
-}
+                echo "Staging OK : http://localhost:8001"
+                '''
+            }
+        }
+
+        stage('Smoke Test') {
+            steps {
+                sh '''
+                echo "Attente démarrage..."
+                sleep 10
+
+                docker ps | grep sentiment-staging
+                docker ps | grep prometheus
+                docker ps | grep grafana
+
+                docker run --rm \
+                --network cicd-network \
+                curlimages/curl:latest \
+                curl -f http://sentiment-staging:8000/health
+
+                echo "/health OK"
+
+                docker run --rm \
+                --network cicd-network \
+                curlimages/curl:latest \
+                curl -s http://sentiment-staging:8000/metrics | grep -q sentiment_predictions_total
+
+                echo "/metrics OK"
+
+                sleep 20
+
+                docker run --rm \
+                --network cicd-network \
+                curlimages/curl:latest \
+                curl -s "http://prometheus:9090/api/v1/query?query=up%7Bjob%3D%22sentiment-ai%22%7D" | grep -q '"value":\\[.*"1"\\]'
+
+                echo "Prometheus scrape sentiment-ai : UP"
+
+                docker run --rm \
+                --network cicd-network \
+                curlimages/curl:latest \
+                curl -f http://grafana:3000/api/health
+
+                echo "Grafana OK"
+                '''
+            }
+
+            post {
+                failure {
+                    sh 'docker logs prometheus || true'
+                    sh 'docker logs sentiment-staging || true'
+                    sh 'docker logs grafana || true'
+                    echo 'Smoke Test KO -- voir logs ci-dessus'
+                }
+            }
+        }
     }
 
     post {
