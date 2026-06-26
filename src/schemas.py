@@ -8,5 +8,3 @@ class PredictionRequest(BaseModel):
 class PredictionResponse(BaseModel):
     label: str
     score: float
-
-    
